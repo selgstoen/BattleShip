@@ -1,0 +1,147 @@
+﻿@{
+    ViewBag.Title = "JoinServer";
+}
+
+
+
+<h2>Battle Ship</h2>
+
+
+<h3>Commit attack</h3>
+<div class="container">
+    <label>Row</label>
+    <input type="text" id="row" />
+    <label>Column</label>
+    <input type="text" id="column" />
+    <input type="button" id="sendmessage" value="Send" />
+    <input type="hidden" id="displayname" />
+    <ul id="discussion"></ul>
+</div>
+
+<label>Yours</label>
+<div id="tblyours"></div>
+<p></p>
+<label>Theirs</label>
+<div id="tbltheirs"></div>
+
+
+
+@section scripts {
+   
+    <script src="~/Scripts/jquery.signalR-2.0.0.min.js"></script>
+    <script src="~/signalr/hubs"></script>
+    <script>
+
+        var table = document.createElement("table");
+        table.border = true;
+        for (i = 1; i < 11; i++) {
+            var row = document.createElement("tr");
+            row.vAlign = "middle";
+            for (j = 1; j < 11; j++) {
+                var cell = document.createElement("td");
+                cell.id = getId(i, j);
+                cell.innerHTML = getColumnOrRowHeaer(i, j);
+                cell.addEventListener("click", cellClick);
+                cell.style.width = "20px";
+                cell.style.height = "20px";
+                cell.align = "center";
+                
+                row.appendChild(cell);
+            }
+
+            table.appendChild(row);
+        }
+        
+        var table2 = document.createElement("table");
+        table2.border = true;
+        for (i = 1; i < 11; i++) {
+            var row = document.createElement("tr");
+            row.vAlign = "middle";
+            for (j = 1; j < 11; j++) {
+                var cell = document.createElement("td");
+                cell.id = getId(i, j);
+                cell.innerHTML = getColumnOrRowHeaer(i, j);
+                cell.addEventListener("click", cellClick);
+                cell.style.width = "20px";
+                cell.style.height = "20px";
+                cell.align = "center";
+
+                row.appendChild(cell);
+            }
+
+            table2.appendChild(row);
+        }
+
+        $('#tblyours').append(table);
+        $('#tbltheirs').append(table2);
+
+
+        $(function() {
+            var battle = $.connection.battleHub;
+            battle.client.addNewMessageToPage = function(name, row, column) {
+                $('#discussion').append('<li><strong>' + htmlEncode(name)
+                    + '</strong>  Row: ' + htmlEncode(row) + ' Column: ' + htmlEncode(column) + '</li>');
+            };
+
+            $('#displayname').val(prompt('Enter your name:', ''));
+            $('#row').focus();
+
+            $.connection.hub.start().done(function() {
+                $('#sendmessage').click(function() {
+                    battle.server.send($('#displayname').val(), $('#row').val(), $('#column').val());
+                    $('#column').val('');
+                    $('#row').val('').focus();
+                });
+            });
+        });
+
+        function cellClick(e) {
+            console.log(e.target.id);
+            var len = e.target.id.length;
+            var col = e.target.id.substr(len - 1, len);
+            var row = e.target.id.substr(0, len - 1);
+            $('#column').val(col);
+            $('#row').val(row);
+        }
+
+        function getId(i, j) {
+            var col = 'AA';
+
+            if (j === 2) col = 'A';
+            if (j === 3) col = 'B';
+            if (j === 4) col = 'C';
+            if (j === 5) col = 'D';
+            if (j === 6) col = 'E';
+            if (j === 7) col = 'F';
+            if (j === 8) col = 'G';
+            if (j === 9) col = 'H';
+            if (j === 10) col = 'I';
+            if (j === 11) col = 'J';
+
+            return i + col;
+        }
+        
+        function getColumnOrRowHeaer(i, j) {
+            if (j === 1) return i;
+            if (i === 1) {
+                if (j === 2) return 'A';
+                if (j === 3) return 'B';
+                if (j === 4) return 'C';
+                if (j === 5) return 'D';
+                if (j === 6) return 'E';
+                if (j === 7) return 'F';
+                if (j === 8) return 'G';
+                if (j === 9) return 'H';
+                if (j === 10) return 'I';
+                if (j === 11) return 'J';
+            }
+            
+            return ' ';
+        }
+
+        function htmlEncode(value) {
+            var encodedValue = $('<div />').text(value).html();
+            return encodedValue;
+        }
+    </script>
+}
